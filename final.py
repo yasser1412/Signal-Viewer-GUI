@@ -311,6 +311,7 @@ class Ui_mainWindow(object):
             del self.filenames[self.Current_File[self.current_widget]]
             del self.Current_File[self.current_widget]
             del self.spectroImg_list[self.current_widget]
+            os.remove(self.spectroImg_list[self.current_widget])
     
     def only_y(self):
         # only move and zoom in y-axis
