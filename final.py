@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from pyqtgraph import PlotWidget
-from PyQt5 import QtCore, QtGui, QtWidgets
+import pyqtgraph as pg
+import pyqtgraph.exporters
+from pyqtgraph import PlotWidget, plot
 from PyQt5.QtWidgets import QMessageBox
 import pandas as pd
 import numpy as np
@@ -10,10 +11,6 @@ import matplotlib.pyplot as plt
 from scipy.io import loadmat
 from fpdf import FPDF
 import os
-from pyqtgraph import PlotWidget, plot
-import pyqtgraph as pg
-import pyqtgraph.exporters
-
 
 class Ui_mainWindow(object):
     #dictinary stores files with its format
@@ -88,9 +85,6 @@ class Ui_mainWindow(object):
         self.label_3.setGeometry(QtCore.QRect(280, 370, 61, 21))
         self.label_3.setStyleSheet("font: 12pt \"Arial Narrow\";\n" "")
         self.label_3.setObjectName("label_3")
-        #self.pushButton = QtWidgets.QPushButton(self.centralwidget)
-        #self.pushButton.setGeometry(QtCore.QRect(0, 0, 0, 0))
-        #self.pushButton.setObjectName("pushButton")
         mainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(mainWindow)
         self.statusbar.setObjectName("statusbar")
@@ -102,7 +96,7 @@ class Ui_mainWindow(object):
         sizePolicy.setHeightForWidth(self.toolBar.sizePolicy().hasHeightForWidth())
         self.toolBar.setSizePolicy(sizePolicy)
         self.toolBar.setAutoFillBackground(False)
-        self.toolBar.setStyleSheet("background-color: rgb(128, 156, 255);\n" "selection-background-color: rgb(255, 255, 255);")
+        self.toolBar.setStyleSheet("background-color: rgb(220, 220, 220);\n" "selection-background-color: rgb(255, 255, 255);")
         self.toolBar.setIconSize(QtCore.QSize(28, 28))
         self.toolBar.setObjectName("toolBar")
         mainWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
@@ -204,7 +198,10 @@ class Ui_mainWindow(object):
         self.actionZoom_out.triggered.connect(self.zoom_out)
         self.actionRight.triggered.connect(self.move_right)
         self.actionLeft.triggered.connect(self.move_left)
-        #self.pushButton.clicked.connect(self.reset)
+        
+        self.widget.setBackground("w")
+        self.widget_2.setBackground("w")
+        self.widget_3.setBackground("w")
         
         #a list of widgets on the program used in selecting a widget
         self.widgets = [self.widget,self.widget_2,self.widget_3]
@@ -246,7 +243,6 @@ class Ui_mainWindow(object):
         self.actionZoom_in.setShortcut(_translate("MainWindow", "Up"))
         self.actionZoom_out.setText(_translate("mainWindow", "Zoom-out"))
         self.actionZoom_out.setShortcut(_translate("MainWindow", "Down"))
-        #self.pushButton.setShortcut(_translate("MainWindow", "Ctrl+Shift+R"))
 
     def load_file(self):
         #a function that loads the files data
@@ -267,36 +263,34 @@ class Ui_mainWindow(object):
                 self.filenames[self.filename] = self.format
                 self.Current_File[self.current_widget] = self.filename
                 
-                self.checkFileEXT(self.filenames)
+                self.checkFileEXT(self.filename)
     
     def checkFileEXT(self, file):
         #a function that checks file extintions 
-        
-        for i in file.items():
-            if i[1] == "*.csv":
-                csv_file = pd.read_csv(i[0]).iloc[:,1]
-                #saves data length of the file
-                self.widgets[self.current_widget].dataLength = csv_file.__len__()
+        if file.endswith(".csv"):
+            csv_file = pd.read_csv(file).iloc[:,1]
+            #saves data length of the file
+            self.widgets[self.current_widget].dataLength = csv_file.__len__()
                 
-                self.plot_here(csv_file, i[0])
-                self.plot_spectro(csv_file)
+            self.plot_here(csv_file, file)
+            self.plot_spectro(csv_file)
                 
-            elif i[1] == "*.txt":
-                txt_file = pd.read_csv(i[0]).iloc[:,2]
-                #saves data length of the file
-                self.widgets[self.current_widget].dataLength = txt_file.__len__()
+        elif file.endswith(".txt"):
+            txt_file = pd.read_csv(file).iloc[:,2]
+            #saves data length of the file
+            self.widgets[self.current_widget].dataLength = txt_file.__len__()
                 
-                self.plot_here(txt_file, i[0])
-                self.plot_spectro(txt_file)
+            self.plot_here(txt_file, file)
+            self.plot_spectro(txt_file)
             
-            elif i[1] == "*.mat":
-                mat = loadmat(i[0])
-                mat_file = pd.DataFrame(mat["F"]).iloc[:,1]
-                #saves data length of the file
-                self.widgets[self.current_widget].dataLength = mat_file.__len__()
+        elif file.endswith(".mat"):
+            mat = loadmat(file)
+            mat_file = pd.DataFrame(mat["F"]).iloc[:,1]
+            #saves data length of the file
+            self.widgets[self.current_widget].dataLength = mat_file.__len__()
                 
-                self.plot_here(mat_file, i[0])
-                self.plot_spectro(mat_file)
+            self.plot_here(mat_file, file)
+            self.plot_spectro(mat_file)
 
     def clear(self):
         #a functions that clears a graph and delete its file
@@ -307,11 +301,9 @@ class Ui_mainWindow(object):
         self.widgets[self.current_widget].plotItem.showGrid(False,False)
         
         if self.current_widget in self.Current_File:
-            #delete the file from filenames dict and current_file dict
+        #delete the file from filenames dict and current_file dict
             del self.filenames[self.Current_File[self.current_widget]]
             del self.Current_File[self.current_widget]
-            del self.spectroImg_list[self.current_widget]
-            os.remove(self.spectroImg_list[self.current_widget])
     
     def only_y(self):
         # only move and zoom in y-axis
@@ -367,13 +359,14 @@ class Ui_mainWindow(object):
         self.widgets[self.current_widget].plotItem.showGrid(True, True, alpha=1)
         self.widgets[self.current_widget].setXRange(0, 1000)
         self.widgets[self.current_widget].plotItem.setLabel("bottom", text="Time (ms)")
-        self.widgets[self.current_widget].plot(file, name=name, pen = self.pens[self.current_widget])            
+        self.widgets[self.current_widget].plot(file, name=name, pen = self.pens[self.current_widget])
+        self.widgets[self.current_widget].plotItem.getViewBox().enableAutoRange(axis='y')            
 
     def plot_spectro(self,file):
         # the function that plot spectrogram of the selected signal
 
         self.check_widget
-        plt.specgram(file,Fs=10e3)
+        plt.specgram(file,Fs=10)
         plt.xlabel('Time')
         plt.ylabel('Frequency')
         plt.savefig('images/spectro'+str(self.current_widget + 1)+'.png')
@@ -390,7 +383,7 @@ class Ui_mainWindow(object):
         self.isStoped = False
         data_length = self.widgets[self.current_widget].dataLength
         
-        for x in range(data_length):
+        for x in range(0,data_length, 2):
             #increasing the x-axis range by x
             self.widgets[self.current_widget].setXRange(self.graph_rangeMin[self.current_widget] + x, self.graph_rangeMax[self.current_widget] + x)
             QtWidgets.QApplication.processEvents()
@@ -439,12 +432,13 @@ class Ui_mainWindow(object):
             except:
                 pass
 
-        pdf.output("report.pdf", "F")    
+        pdf.output("report.pdf", "F") 
         print("Report PDF is ready")    
+    
     def zoom_in(self):
         self.check_widget
         self.widgets[self.current_widget].plotItem.getViewBox().scaleBy(x = 0.5, y = 1)
-        
+    
     def zoom_out(self):
         self.check_widget
         self.widgets[self.current_widget].plotItem.getViewBox().scaleBy(x = 2, y = 1)
