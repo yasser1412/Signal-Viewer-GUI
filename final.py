@@ -365,7 +365,7 @@ class Ui_mainWindow(object):
     def plot_spectro(self,file):
         # the function that plot spectrogram of the selected signal
 
-        self.check_widget
+        self.check_widget()
         plt.specgram(file,Fs=10)
         plt.xlabel('Time')
         plt.ylabel('Frequency')
@@ -436,22 +436,22 @@ class Ui_mainWindow(object):
         print("Report PDF is ready")    
     
     def zoom_in(self):
-        self.check_widget
+        self.check_widget()
         self.widgets[self.current_widget].plotItem.getViewBox().scaleBy(x = 0.5, y = 1)
     
     def zoom_out(self):
-        self.check_widget
+        self.check_widget()
         self.widgets[self.current_widget].plotItem.getViewBox().scaleBy(x = 2, y = 1)
     
     def move_right(self):
-        self.check_widget
+        self.check_widget()
         self.widgets[self.current_widget].setXRange(self.graph_rangeMin[self.current_widget] + 100, self.graph_rangeMax[self.current_widget] + 100)
 
         self.graph_rangeMin[self.current_widget] = self.graph_rangeMin[self.current_widget] + 100
         self.graph_rangeMax[self.current_widget] = self.graph_rangeMax[self.current_widget] + 100
     
     def move_left(self):
-        self.check_widget
+        self.check_widget()
         self.widgets[self.current_widget].setXRange(self.graph_rangeMin[self.current_widget] - 100, self.graph_rangeMax[self.current_widget] - 100)
 
         self.graph_rangeMin[self.current_widget] = self.graph_rangeMin[self.current_widget] - 100
